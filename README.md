@@ -1,2 +1,2 @@
-# -ng-d-ng-game-cho-tr-c-bi-t
+# Ứng dụng game cho trẻ đặc biệt
 BTL-TTNM-INT2041 1
