@@ -49,13 +49,13 @@ const EmotionDetect = () => {
       streamRef.current = stream;
       setIsStreaming(true);
       toast({
-        title: "Camera started! 📸",
-        description: "Now show me your emotions!"
+        title: "Camera đã khởi động! 📸",
+        description: "Bây giờ hãy thể hiện cảm xúc của bạn!"
       });
     } catch (error) {
       toast({
-        title: "Oops!",
-        description: "We couldn't start the camera. Please check permissions.",
+        title: "Ối!",
+        description: "Không thể khởi động camera. Vui lòng kiểm tra quyền truy cập.",
         variant: "destructive"
       });
     }
@@ -166,11 +166,11 @@ const EmotionDetect = () => {
           <Link to="/">
             <Button variant="outline" size="lg">
               <ArrowLeft className="w-5 h-5 mr-2" />
-              Back Home
+              Về trang chủ
             </Button>
           </Link>
           <h1 className="text-4xl font-bold text-foreground">
-            Practice Your Emotions! 📸
+            Luyện Tập Cảm Xúc! 📸
           </h1>
         </div>
 
@@ -181,7 +181,7 @@ const EmotionDetect = () => {
                 <div className="text-center space-y-4">
                   <Camera className="w-24 h-24 mx-auto text-muted-foreground" />
                   <p className="text-2xl text-muted-foreground">
-                    Click Start to begin!
+                    Nhấn Bắt đầu để bắt đầu!
                   </p>
                 </div>
               ) : (
@@ -205,7 +205,7 @@ const EmotionDetect = () => {
                   className="text-xl px-8 py-6 bg-primary"
                 >
                   <Camera className="w-6 h-6 mr-2" />
-                  Start Camera
+                  Bắt đầu Camera
                 </Button>
               ) : (
                 <Button 
@@ -216,7 +216,7 @@ const EmotionDetect = () => {
                   disabled={isAnalyzing}
                 >
                   <CameraOff className="w-6 h-6 mr-2" />
-                  Stop Camera
+                  Dừng Camera
                 </Button>
               )}
             </div>
@@ -236,7 +236,7 @@ const EmotionDetect = () => {
                     </p>
                   )}
                   <p className="text-xl text-muted-foreground">
-                    I'm {Math.round((confidence || 0) * 100)}% sure! 🎯
+                    Tôi chắc chắn {Math.round((confidence || 0) * 100)}%! 🎯
                   </p>
                 </div>
               </Card>
@@ -246,8 +246,8 @@ const EmotionDetect = () => {
 
         <Card className="p-6 bg-accent/10 border-accent/30">
           <p className="text-xl text-center text-foreground">
-            💡 <strong>Tip:</strong> Try making different faces! Happy, sad, surprised, or angry. 
-            The camera will tell you what emotion it sees!
+            💡 <strong>Mẹo:</strong> Hãy thử làm các khuôn mặt khác nhau! Vui, buồn, ngạc nhiên, hoặc giận dữ. 
+            Camera sẽ cho bạn biết cảm xúc mà nó nhìn thấy!
           </p>
         </Card>
       </div>
@@ -256,3 +256,4 @@ const EmotionDetect = () => {
 };
 
 export default EmotionDetect;
+
