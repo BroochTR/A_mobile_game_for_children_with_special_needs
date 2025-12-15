@@ -7,6 +7,7 @@ import Home from "./pages/Home";
 import EmotionDetect from "./pages/EmotionDetect";
 import Game1 from "./pages/Game1";
 import Game2 from "./pages/Game2";
+import Game3 from "./pages/Game3";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +23,7 @@ const App = () => (
           <Route path="/detect" element={<EmotionDetect />} />
           <Route path="/game1" element={<Game1 />} />
           <Route path="/game2" element={<Game2 />} />
+          <Route path="/game3" element={<Game3 />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

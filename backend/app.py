@@ -109,6 +109,10 @@ def index():
 def game2():
     return send_from_directory(DIST_DIR, 'index.html')
 
+@app.route('/game3')
+def game3():
+    return send_from_directory(DIST_DIR, 'index.html')
+
 @app.route('/favicon.ico')
 def favicon():
     return send_from_directory(DIST_DIR, 'favicon.ico')
