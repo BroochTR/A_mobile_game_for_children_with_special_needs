@@ -6,37 +6,69 @@ import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { detectEmotionForChallenge, getEmotionChallenge, type EmotionChallenge } from "@/lib/api";
 
-type Challenge = EmotionChallenge & { description: string };
+type Challenge = EmotionChallenge & { description: string; imageUrl: string };
 
-const EMOTION_INSTRUCTIONS: Record<string, string> = {
-  Happy: "Show me a big smile!",
-  Sad: "Make a sad face",
-  Angry: "Show me an angry face",
-  Surprise: "Look surprised!",
-  Suprise: "Look surprised!",
-  Fear: "Make a scared face",
-  Neutral: "Stay calm and relaxed"
+const EMOTION_ASSETS: Record<string, { names: string[]; emoji: string; vietnamese: string }> = {
+  angry: { names: ["angry1", "angry2"], emoji: "😠", vietnamese: "Giận dữ" },
+  disgusted: { names: ["Disgusted1", "Disgusted2"], emoji: "🤢", vietnamese: "Chán ghét" },
+  fear: { names: ["fear1", "fear2"], emoji: "😨", vietnamese: "Sợ hãi" },
+  happy: { names: ["happy1", "happy2"], emoji: "😊", vietnamese: "Vui vẻ" },
+  sad: { names: ["sad1", "sad2"], emoji: "😢", vietnamese: "Buồn" },
+  surprise: { names: ["surprise1", "surprise2"], emoji: "😮", vietnamese: "Ngạc nhiên" }
 };
 
-const FALLBACK_CHALLENGES: Challenge[] = [
-  { emotion: "Happy", emoji: "😊", vietnamese: "Vui", description: EMOTION_INSTRUCTIONS.Happy },
-  { emotion: "Sad", emoji: "😢", vietnamese: "Buồn", description: EMOTION_INSTRUCTIONS.Sad },
-  { emotion: "Angry", emoji: "😠", vietnamese: "Giận", description: EMOTION_INSTRUCTIONS.Angry },
-  { emotion: "Surprise", emoji: "😮", vietnamese: "Ngạc nhiên", description: EMOTION_INSTRUCTIONS.Surprise },
-  { emotion: "Fear", emoji: "😨", vietnamese: "Sợ hãi", description: EMOTION_INSTRUCTIONS.Fear },
-  { emotion: "Neutral", emoji: "😐", vietnamese: "Trung tính", description: EMOTION_INSTRUCTIONS.Neutral }
-];
+const getEmotionImage = (emotion: string) => {
+  const key = emotion.toLowerCase();
+  const asset = EMOTION_ASSETS[key];
+  if (!asset) return null;
+  const pick = asset.names[Math.floor(Math.random() * asset.names.length)];
+  try {
+    return new URL(`../assets/emotions/${pick}.png`, import.meta.url).href;
+  } catch (error) {
+    console.warn("Missing local emotion image", pick, error);
+    return null;
+  }
+};
+
+const EMOTION_INSTRUCTIONS: Record<string, string> = {
+  Happy: "Hãy cười thật tươi!",
+  Sad: "Hãy làm mặt buồn",
+  Angry: "Hãy làm mặt giận dữ",
+  Surprise: "Hãy tỏ ra ngạc nhiên!",
+  Suprise: "Hãy tỏ ra ngạc nhiên!",
+  Fear: "Hãy làm mặt sợ hãi",
+  Neutral: "Hãy giữ bình tĩnh và thư giãn"
+};
+
+const FALLBACK_CHALLENGES: Challenge[] = Object.entries(EMOTION_ASSETS)
+  .map(([key, meta]) => {
+    const emotionTitle = key.charAt(0).toUpperCase() + key.slice(1);
+    return {
+      emotion: emotionTitle,
+      emoji: meta.emoji,
+      vietnamese: meta.vietnamese,
+      description: "Bắt chước khuôn mặt giống ảnh mẫu.",
+      imageUrl: getEmotionImage(key) ?? ""
+    };
+  })
+  .filter(ch => ch.imageUrl);
 
 const enrichChallenge = (challenge: EmotionChallenge): Challenge => {
-  const normalized = challenge.emotion || "";
+  const normalized = (challenge.emotion || "").toLowerCase();
   const capitalized = normalized.charAt(0).toUpperCase() + normalized.slice(1);
-  const description = EMOTION_INSTRUCTIONS[normalized] 
-    ?? EMOTION_INSTRUCTIONS[capitalized] 
-    ?? `Try to feel ${capitalized || "this emotion"}!`;
+  const imageUrl = getEmotionImage(normalized);
+
+  if (!imageUrl) {
+    const fallback = FALLBACK_CHALLENGES[Math.floor(Math.random() * FALLBACK_CHALLENGES.length)];
+    return fallback;
+  }
 
   return {
-    ...challenge,
-    description
+    emotion: capitalized,
+    emoji: challenge.emoji ?? EMOTION_ASSETS[normalized]?.emoji ?? "😊",
+    vietnamese: challenge.vietnamese ?? EMOTION_ASSETS[normalized]?.vietnamese ?? capitalized,
+    description: "Bắt chước khuôn mặt giống ảnh mẫu.",
+    imageUrl
   };
 };
 
@@ -52,13 +84,20 @@ const Game1 = () => {
   const [isFetchingChallenge, setIsFetchingChallenge] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const analyzingRef = useRef(false);
+  const [showGuide, setShowGuide] = useState(false);
   const { toast } = useToast();
 
   const fetchChallenge = useCallback(async () => {
     setIsFetchingChallenge(true);
     try {
       const data = await getEmotionChallenge();
-      setCurrentChallenge(enrichChallenge(data));
+      const normalized = (data.emotion || "").toLowerCase();
+      if (!EMOTION_ASSETS[normalized]) {
+        const fallback = FALLBACK_CHALLENGES[Math.floor(Math.random() * FALLBACK_CHALLENGES.length)];
+        setCurrentChallenge(fallback);
+      } else {
+        setCurrentChallenge(enrichChallenge(data));
+      }
     } catch (error) {
       const fallback = FALLBACK_CHALLENGES[Math.floor(Math.random() * FALLBACK_CHALLENGES.length)];
       setCurrentChallenge(fallback);
@@ -81,13 +120,13 @@ const Game1 = () => {
       streamRef.current = stream;
       setIsStreaming(true);
       toast({
-        title: "Let's play! 🎮",
-        description: "Try to make the emotion shown above!"
+        title: "Bắt đầu chơi! 🎮",
+        description: "Hãy thể hiện cảm xúc được hiển thị ở trên!"
       });
     } catch (error) {
       toast({
-        title: "Oops!",
-        description: "We couldn't start the camera.",
+        title: "Ối!",
+        description: "Không thể khởi động camera.",
         variant: "destructive"
       });
     }
@@ -160,8 +199,8 @@ const Game1 = () => {
       if (correct) {
         setScore(prev => prev + 1);
         toast({
-          title: "🎉 Perfect!",
-          description: result.message ?? "You got it right! Great job!",
+          title: "🎉 Hoàn hảo!",
+          description: result.message ?? "Bạn đã làm đúng! Làm tốt lắm!",
         });
 
         setTimeout(() => {
@@ -211,112 +250,130 @@ const Game1 = () => {
   }, []);
 
   return (
-    <div className="min-h-screen p-6">
-      <div className="max-w-4xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link to="/">
-              <Button variant="outline" size="lg">
-                <ArrowLeft className="w-5 h-5 mr-2" />
-                Back
-              </Button>
-            </Link>
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground">
-              Mimic the Emotion! 🎮
-            </h1>
+    <div className="min-h-screen bg-[#f2e1bb] text-[#4a3562] relative overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_20%_20%,rgba(74,53,98,0.05),transparent_35%),radial-gradient(circle_at_80%_30%,rgba(255,184,28,0.08),transparent_30%),radial-gradient(circle_at_10%_80%,rgba(255,184,28,0.05),transparent_30%)]" />
+
+      <div className="relative max-w-6xl mx-auto px-4 py-6 md:py-10">
+        {/* Header */}
+        <div className="flex items-center justify-between gap-4 mb-8">
+          <Link to="/">
+            <Button variant="outline" className="rounded-full border-[#4a3562] text-[#4a3562] hover:bg-[#4a3562]/10">
+              <ArrowLeft className="w-5 h-5 mr-2" />
+              Quay lại
+            </Button>
+          </Link>
+          <div className="flex-1 text-center">
+            <p className="text-sm uppercase tracking-[0.2em] text-[#b07b16]">Emotion Mimic</p>
+            <h1 className="text-3xl md:text-4xl font-bold text-[#4a3562]">Bắt Chước Cảm Xúc</h1>
           </div>
-          
-          <Card className="px-6 py-3 bg-success/10 border-success">
-            <p className="text-2xl font-bold text-success">
-              Score: {score} 🌟
-            </p>
-          </Card>
+          <div className="relative">
+            <button
+              className="w-10 h-10 rounded-full bg-[#4a3562] text-white flex items-center justify-center shadow-lg hover:bg-[#3c2c50] transition"
+              onClick={() => setShowGuide((prev) => !prev)}
+            >
+              <span className="text-lg font-semibold">?</span>
+            </button>
+            {showGuide && (
+              <div className="absolute right-0 mt-2 w-72 bg-white text-[#4a3562] rounded-2xl shadow-xl border border-[#d7c38e] p-4 z-10">
+                <p className="text-sm font-semibold mb-1">Cách chơi</p>
+                <p className="text-sm leading-relaxed">
+                  Nhìn vào ảnh mẫu và thể hiện lại cảm xúc tương ứng bằng khuôn mặt. Nhấn Bắt đầu để bật camera, hệ thống sẽ chấm điểm tự động.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
 
-        {!isCorrect && (
-          <Card className="p-8 bg-primary/10 border-primary/30 text-center">
-            <div className="space-y-4">
-              <div className="text-9xl animate-pulse-soft">
-                {currentChallenge.emoji}
-              </div>
-              <h2 className="text-3xl font-bold text-primary">
-                {currentChallenge.description}
-              </h2>
-              <p className="text-xl text-muted-foreground">
-                Try to feel {currentChallenge.vietnamese} ({currentChallenge.emotion}) with your face!
-              </p>
-              {isFetchingChallenge && (
-                <p className="text-sm text-muted-foreground">
-                  Loading a fresh challenge...
-                </p>
-              )}
-            </div>
-          </Card>
-        )}
-
-        {isCorrect && (
-          <Card className="p-8 bg-success/10 border-success text-center animate-celebration">
-            <div className="space-y-4">
-              <Sparkles className="w-24 h-24 mx-auto text-success animate-spin" />
-              <h2 className="text-4xl font-bold text-success">
-                🎉 Amazing! You did it! 🎉
-              </h2>
-              <p className="text-2xl text-foreground">
-                That was a perfect {currentChallenge.vietnamese} face!
-              </p>
-            </div>
-          </Card>
-        )}
-
-        <Card className="p-6 bg-card">
-          <div className="space-y-6">
-            <div className="relative bg-muted rounded-lg overflow-hidden aspect-video flex items-center justify-center">
-              {!isStreaming ? (
-                <div className="text-center space-y-4">
-                  <Camera className="w-24 h-24 mx-auto text-muted-foreground" />
-                  <p className="text-2xl text-muted-foreground">
-                    Ready to play? Click Start!
-                  </p>
-                </div>
-              ) : (
-                <>
-                  <video
-                    ref={videoRef}
-                    autoPlay
-                    playsInline
-                    className="w-full h-full object-cover"
+        <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6 items-start">
+          {/* Challenge Card */}
+          <Card className="p-6 md:p-8 bg-[#f7edce] border-[#d7c38e] shadow-[0_12px_30px_rgba(74,53,98,0.12)] rounded-3xl h-full flex flex-col">
+            {!isCorrect ? (
+              <div className="space-y-5 text-center flex-1 flex flex-col justify-center">
+                <div className="mx-auto w-56 h-56 md:w-64 md:h-64 bg-white rounded-2xl border-4 border-[#7a59a4] overflow-hidden shadow-lg flex items-center justify-center">
+                  <img
+                    src={currentChallenge.imageUrl}
+                    alt={currentChallenge.emotion}
+                    className="w-full h-full object-contain"
                   />
-                  <canvas ref={canvasRef} className="hidden" />
-                </>
-              )}
+                </div>
+                <h2 className="text-3xl font-bold text-[#4a3562]">
+                  Hãy thể hiện cảm xúc tương ứng
+                </h2>
+                {isFetchingChallenge && (
+                  <p className="text-sm text-[#4a3562]/70">
+                    Đang tải thử thách mới...
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-5 text-center flex-1 flex flex-col justify-center animate-celebration">
+                <Sparkles className="w-24 h-24 mx-auto text-[#5c3f7f] animate-spin" />
+                <h2 className="text-4xl font-bold text-[#4a3562]">
+                  🎉 Tuyệt vời! Bạn đã làm được! 🎉
+                </h2>
+                <p className="text-2xl text-[#4a3562]/80">
+                  Đó là một khuôn mặt {currentChallenge.vietnamese} hoàn hảo!
+                </p>
+              </div>
+            )}
+          </Card>
+
+          {/* Sidebar / Camera */}
+          <div className="space-y-4 w-full">
+            <div className="bg-[#fcbf25] text-[#4a3562] rounded-3xl shadow-[0_14px_28px_rgba(74,53,98,0.25)] p-6 relative overflow-hidden">
+              <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-16 h-16 bg-[#f7edce] rounded-full opacity-30" />
+              <div className="space-y-3 relative">
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold">Điểm</span>
+                  <span className="text-xl font-bold">{score}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold">Trạng thái</span>
+                  <span className="text-sm font-semibold">{isStreaming ? "Đang quay" : "Chưa quay"}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-3 pt-1">
+                  <Button
+                    onClick={startCamera}
+                    disabled={isStreaming || isFetchingChallenge}
+                    className="bg-[#4a3562] text-[#f7edce] hover:bg-[#3c2c50]"
+                  >
+                    <Camera className="w-5 h-5 mr-2" />
+                    Bắt đầu
+                  </Button>
+                  <Button
+                    onClick={stopCamera}
+                    variant="destructive"
+                    disabled={!isStreaming || isAnalyzing}
+                  >
+                    <CameraOff className="w-5 h-5 mr-2" />
+                    Dừng lại
+                  </Button>
+                </div>
+              </div>
             </div>
 
-            <div className="flex gap-4 justify-center">
-              {!isStreaming ? (
-                <Button 
-                  size="lg" 
-                  onClick={startCamera}
-                  className="text-xl px-8 py-6 bg-secondary"
-                  disabled={isFetchingChallenge}
-                >
-                  <Camera className="w-6 h-6 mr-2" />
-                  {isFetchingChallenge ? "Loading..." : "Start Game"}
-                </Button>
-              ) : (
-                <Button 
-                  size="lg" 
-                  onClick={stopCamera}
-                  variant="destructive"
-                  className="text-xl px-8 py-6"
-                  disabled={isAnalyzing}
-                >
-                  <CameraOff className="w-6 h-6 mr-2" />
-                  Stop Game
-                </Button>
-              )}
-            </div>
+            <Card className="p-4 bg-[#f7edce] border-[#d7c38e] rounded-2xl text-center">
+              <div className="relative bg-[#e9ddba] rounded-xl overflow-hidden aspect-video flex items-center justify-center">
+                {!isStreaming ? (
+                  <div className="text-center space-y-3 p-6 text-[#4a3562]/80">
+                    <Camera className="w-16 h-16 mx-auto" />
+                    <p className="text-lg">Nhấn Bắt đầu để bật camera và thể hiện cảm xúc giống ảnh.</p>
+                  </div>
+                ) : (
+                  <>
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      playsInline
+                      className="w-full h-full object-cover"
+                    />
+                    <canvas ref={canvasRef} className="hidden" />
+                  </>
+                )}
+              </div>
+            </Card>
           </div>
-        </Card>
+        </div>
       </div>
     </div>
   );

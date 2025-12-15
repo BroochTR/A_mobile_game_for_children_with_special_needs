@@ -9,35 +9,35 @@ import { detectEmotionForScenario, getScenario, type Scenario } from "@/lib/api"
 const FALLBACK_SCENARIOS: Scenario[] = [
   {
     id: 1,
-    story: "You received a gift from your friend! 🎁",
+    story: "Bạn nhận được quà từ bạn bè! 🎁",
     correct_emotion: "Happy",
     emoji: "😊",
     illustration: "🎁"
   },
   {
     id: 2,
-    story: "Your favorite toy broke 💔",
+    story: "Đồ chơi yêu thích của bạn bị vỡ 💔",
     correct_emotion: "Sad",
     emoji: "😢",
     illustration: "🧸"
   },
   {
     id: 3,
-    story: "Someone took your toy without asking 😤",
+    story: "Ai đó lấy đồ chơi của bạn mà không hỏi 😤",
     correct_emotion: "Angry",
     emoji: "😠",
     illustration: "🎮"
   },
   {
     id: 4,
-    story: "You found a magic surprise box! ✨",
+    story: "Bạn tìm thấy một hộp quà bất ngờ kỳ diệu! ✨",
     correct_emotion: "Surprise",
     emoji: "😮",
     illustration: "📦"
   },
   {
     id: 5,
-    story: "You hear a loud noise in the dark 🌙",
+    story: "Bạn nghe thấy tiếng động lớn trong bóng tối 🌙",
     correct_emotion: "Fear",
     emoji: "😨",
     illustration: "🌙"
@@ -57,6 +57,7 @@ const Game2 = () => {
   const [isFetchingScenario, setIsFetchingScenario] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const analyzingRef = useRef(false);
+  const [showGuide, setShowGuide] = useState(false);
   const { toast } = useToast();
 
   const fetchScenario = useCallback(async () => {
@@ -88,13 +89,13 @@ const Game2 = () => {
       streamRef.current = stream;
       setIsStreaming(true);
       toast({
-        title: "Story time! 📖",
-        description: "Show the right emotion for each story!"
+        title: "Giờ kể chuyện! 📖",
+        description: "Hãy thể hiện cảm xúc phù hợp cho mỗi câu chuyện!"
       });
     } catch (error) {
       toast({
-        title: "Oops!",
-        description: "We couldn't start the camera.",
+        title: "Ối!",
+        description: "Không thể khởi động camera.",
         variant: "destructive"
       });
     }
@@ -164,8 +165,8 @@ const Game2 = () => {
         setIsCorrect(true);
         setScore(prev => prev + 1);
         toast({
-          title: "🎉 Excellent!",
-          description: result.message ?? "You understood the story perfectly!",
+          title: "🎉 Xuất sắc!",
+          description: result.message ?? "Bạn đã hiểu câu chuyện một cách hoàn hảo!",
         });
 
         setTimeout(() => {
@@ -175,8 +176,8 @@ const Game2 = () => {
         }, 3000);
       } else {
         toast({
-          title: "Not quite! 🤔",
-          description: result.message ?? "Try again! Think about how you would feel.",
+          title: "Chưa đúng! 🤔",
+          description: result.message ?? "Hãy thử lại! Nghĩ xem bạn sẽ cảm thấy như thế nào.",
           variant: "destructive"
         });
         setIsCorrect(null);
@@ -215,132 +216,147 @@ const Game2 = () => {
   }, []);
 
   return (
-    <div className="min-h-screen p-6">
-      <div className="max-w-4xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link to="/">
-              <Button variant="outline" size="lg">
-                <ArrowLeft className="w-5 h-5 mr-2" />
-                Back
-              </Button>
-            </Link>
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground">
-              Story Time Emotions! 📖
-            </h1>
+    <div className="min-h-screen bg-[#f2e1bb] text-[#4a3562] relative overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_20%_20%,rgba(74,53,98,0.05),transparent_35%),radial-gradient(circle_at_80%_30%,rgba(255,184,28,0.08),transparent_30%),radial-gradient(circle_at_10%_80%,rgba(255,184,28,0.05),transparent_30%)]" />
+
+      <div className="relative max-w-6xl mx-auto px-4 py-6 md:py-10">
+        {/* Header */}
+        <div className="flex items-center justify-between gap-4 mb-8">
+          <Link to="/">
+            <Button variant="outline" className="rounded-full border-[#4a3562] text-[#4a3562] hover:bg-[#4a3562]/10">
+              <ArrowLeft className="w-5 h-5 mr-2" />
+              Quay lại
+            </Button>
+          </Link>
+          <div className="flex-1 text-center">
+            <p className="text-sm uppercase tracking-[0.2em] text-[#b07b16]">Story Time</p>
+            <h1 className="text-3xl md:text-4xl font-bold text-[#4a3562]">Cảm Xúc Theo Câu Chuyện</h1>
           </div>
-          
-          <Card className="px-6 py-3 bg-success/10 border-success">
-            <p className="text-2xl font-bold text-success">
-              Score: {score} ⭐
-            </p>
-          </Card>
+          <div className="relative">
+            <button
+              className="w-10 h-10 rounded-full bg-[#4a3562] text-white flex items-center justify-center shadow-lg hover:bg-[#3c2c50] transition"
+              onClick={() => setShowGuide((prev) => !prev)}
+            >
+              <span className="text-lg font-semibold">?</span>
+            </button>
+            {showGuide && (
+              <div className="absolute right-0 mt-2 w-72 bg-white text-[#4a3562] rounded-2xl shadow-xl border border-[#d7c38e] p-4 z-10">
+                <p className="text-sm font-semibold mb-1">Cách chơi</p>
+                <p className="text-sm leading-relaxed">
+                  Đọc câu chuyện, đoán cảm xúc phù hợp và thể hiện bằng khuôn mặt. Bấm Bắt đầu để bật camera, có thể mở gợi ý nếu cần.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
 
-        {!isCorrect && (
-          <Card className="p-8 bg-accent/10 border-accent/30">
-            <div className="text-center space-y-6">
-              <div className="text-8xl mb-4">
-                {currentScenario.illustration}
-              </div>
-              <h2 className="text-3xl font-bold text-foreground">
-                {currentScenario.story}
-              </h2>
-              <p className="text-2xl text-muted-foreground">
-                How would you feel? Show me with your face!
-              </p>
-              {isFetchingScenario && (
-                <p className="text-sm text-muted-foreground">
-                  Loading a new story...
+        <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6 items-start">
+          {/* Story Card */}
+          <Card className="p-6 md:p-8 bg-[#f7edce] border-[#d7c38e] shadow-[0_12px_30px_rgba(74,53,98,0.12)] rounded-3xl h-full flex flex-col">
+            {!isCorrect ? (
+              <div className="text-center space-y-6 flex-1 flex flex-col justify-center">
+                <div className="text-8xl mb-2">{currentScenario.illustration}</div>
+                <h2 className="text-3xl font-bold text-[#4a3562]">
+                  {currentScenario.story}
+                </h2>
+                <p className="text-xl text-[#4a3562]/80">
+                  Bạn sẽ cảm thấy như thế nào? Hãy thể hiện bằng khuôn mặt!
                 </p>
-              )}
-              
-              {!showHint && (
-                <Button 
-                  onClick={() => setShowHint(true)}
-                  variant="outline"
-                  size="lg"
-                  className="text-lg"
-                >
-                  💡 Need a hint?
-                </Button>
-              )}
-
-              {showHint && (
-                <Card className="p-6 bg-primary/10 border-primary inline-block">
-                  <div className="text-6xl mb-2">{currentScenario.emoji}</div>
-                  <p className="text-xl text-primary font-semibold">
-                    Try to feel {currentScenario.correct_emotion}!
+                {isFetchingScenario && (
+                  <p className="text-sm text-[#4a3562]/70">
+                    Đang tải câu chuyện mới...
                   </p>
-                </Card>
-              )}
-            </div>
-          </Card>
-        )}
+                )}
 
-        {isCorrect && (
-          <Card className="p-8 bg-success/10 border-success text-center animate-celebration">
-            <div className="space-y-4">
-              <Sparkles className="w-24 h-24 mx-auto text-success animate-spin" />
-              <h2 className="text-4xl font-bold text-success">
-                🌟 Perfect! You're so smart! 🌟
-              </h2>
-              <p className="text-2xl text-foreground">
-                That's exactly how I would feel too!
-              </p>
-            </div>
-          </Card>
-        )}
+                {!showHint && (
+                  <Button 
+                    onClick={() => setShowHint(true)}
+                    variant="outline"
+                    size="lg"
+                    className="text-lg rounded-full border-[#4a3562] text-[#4a3562] hover:bg-[#4a3562]/10"
+                  >
+                    💡 Cần gợi ý?
+                  </Button>
+                )}
 
-        <Card className="p-6 bg-card">
-          <div className="space-y-6">
-            <div className="relative bg-muted rounded-lg overflow-hidden aspect-video flex items-center justify-center">
-              {!isStreaming ? (
-                <div className="text-center space-y-4">
-                  <Camera className="w-24 h-24 mx-auto text-muted-foreground" />
-                  <p className="text-2xl text-muted-foreground">
-                    Ready for stories? Click Start!
-                  </p>
+                {showHint && (
+                  <Card className="p-6 bg-white border-[#7a59a4]/40 inline-block rounded-2xl">
+                    <div className="text-6xl mb-2">{currentScenario.emoji}</div>
+                    <p className="text-xl text-[#4a3562] font-semibold">
+                      Hãy thể hiện cảm xúc {currentScenario.correct_emotion}!
+                    </p>
+                  </Card>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-4 text-center flex-1 flex flex-col justify-center animate-celebration">
+                <Sparkles className="w-24 h-24 mx-auto text-[#5c3f7f] animate-spin" />
+                <h2 className="text-4xl font-bold text-[#4a3562]">
+                  🌟 Hoàn hảo! Bạn thật thông minh! 🌟
+                </h2>
+                <p className="text-2xl text-[#4a3562]/80">
+                  Đó chính xác là cách tôi cũng sẽ cảm thấy!
+                </p>
+              </div>
+            )}
+          </Card>
+
+          {/* Sidebar / Camera */}
+          <div className="space-y-4 w-full">
+            <div className="bg-[#fcbf25] text-[#4a3562] rounded-3xl shadow-[0_14px_28px_rgba(74,53,98,0.25)] p-6 relative overflow-hidden">
+              <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-16 h-16 bg-[#f7edce] rounded-full opacity-30" />
+              <div className="space-y-3 relative">
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold">Điểm</span>
+                  <span className="text-xl font-bold">{score}</span>
                 </div>
-              ) : (
-                <>
-                  <video
-                    ref={videoRef}
-                    autoPlay
-                    playsInline
-                    className="w-full h-full object-cover"
-                  />
-                  <canvas ref={canvasRef} className="hidden" />
-                </>
-              )}
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold">Trạng thái</span>
+                  <span className="text-sm font-semibold">{isStreaming ? "Đang quay" : "Chưa quay"}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-3 pt-1">
+                  <Button
+                    onClick={startCamera}
+                    disabled={isStreaming || isFetchingScenario}
+                    className="bg-[#4a3562] text-[#f7edce] hover:bg-[#3c2c50]"
+                  >
+                    <Camera className="w-5 h-5 mr-2" />
+                    Bắt đầu
+                  </Button>
+                  <Button
+                    onClick={stopCamera}
+                    variant="destructive"
+                    disabled={!isStreaming || isAnalyzing}
+                  >
+                    <CameraOff className="w-5 h-5 mr-2" />
+                    Dừng lại
+                  </Button>
+                </div>
+              </div>
             </div>
 
-            <div className="flex gap-4 justify-center">
-              {!isStreaming ? (
-                <Button 
-                  size="lg" 
-                  onClick={startCamera}
-                  className="text-xl px-8 py-6 bg-accent"
-                  disabled={isFetchingScenario}
-                >
-                  <Camera className="w-6 h-6 mr-2" />
-                  {isFetchingScenario ? "Loading..." : "Start Stories"}
-                </Button>
-              ) : (
-                <Button 
-                  size="lg" 
-                  onClick={stopCamera}
-                  variant="destructive"
-                  className="text-xl px-8 py-6"
-                  disabled={isAnalyzing}
-                >
-                  <CameraOff className="w-6 h-6 mr-2" />
-                  Stop Stories
-                </Button>
-              )}
-            </div>
+            <Card className="p-4 bg-[#f7edce] border-[#d7c38e] rounded-2xl text-center">
+              <div className="relative bg-[#e9ddba] rounded-xl overflow-hidden aspect-video flex items-center justify-center flex-1">
+                {!isStreaming ? (
+                  <div className="text-center space-y-3 p-6 text-[#4a3562]/80">
+                    <Camera className="w-16 h-16 mx-auto" />
+                    <p className="text-lg">Nhấn Bắt đầu để bật camera và thể hiện cảm xúc cho câu chuyện.</p>
+                  </div>
+                ) : (
+                  <>
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      playsInline
+                      className="w-full h-full object-cover"
+                    />
+                    <canvas ref={canvasRef} className="hidden" />
+                  </>
+                )}
+              </div>
+            </Card>
           </div>
-        </Card>
+        </div>
       </div>
     </div>
   );
