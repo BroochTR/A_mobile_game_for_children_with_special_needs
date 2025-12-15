@@ -39,8 +39,7 @@ ENV/
 dist/
 *.egg
 
-# Model files (too large for git)
-*.hdf5
+
 *.caffemodel
 *.pth
 *.pt
