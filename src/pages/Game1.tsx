@@ -10,7 +10,6 @@ type Challenge = EmotionChallenge & { description: string; imageUrl: string };
 
 const EMOTION_ASSETS: Record<string, { names: string[]; emoji: string; vietnamese: string }> = {
   angry: { names: ["angry1", "angry2"], emoji: "😠", vietnamese: "Giận dữ" },
-  disgusted: { names: ["Disgusted1", "Disgusted2"], emoji: "🤢", vietnamese: "Chán ghét" },
   fear: { names: ["fear1", "fear2"], emoji: "😨", vietnamese: "Sợ hãi" },
   happy: { names: ["happy1", "happy2"], emoji: "😊", vietnamese: "Vui vẻ" },
   sad: { names: ["sad1", "sad2"], emoji: "😢", vietnamese: "Buồn" },
@@ -36,8 +35,7 @@ const EMOTION_INSTRUCTIONS: Record<string, string> = {
   Angry: "Hãy làm mặt giận dữ",
   Surprise: "Hãy tỏ ra ngạc nhiên!",
   Suprise: "Hãy tỏ ra ngạc nhiên!",
-  Fear: "Hãy làm mặt sợ hãi",
-  Neutral: "Hãy giữ bình tĩnh và thư giãn"
+  Fear: "Hãy làm mặt sợ hãi"
 };
 
 const FALLBACK_CHALLENGES: Challenge[] = Object.entries(EMOTION_ASSETS)
@@ -120,8 +118,8 @@ const Game1 = () => {
       streamRef.current = stream;
       setIsStreaming(true);
       toast({
-        title: "Bắt đầu chơi! 🎮",
-        description: "Hãy thể hiện cảm xúc được hiển thị ở trên!"
+        title: "Đã bật camera! 📸",
+        description: "Hãy quan sát hình mẫu, thể hiện cảm xúc tương ứng, rồi nhấn 'Chụp và kiểm tra'!"
       });
     } catch (error) {
       toast({
@@ -175,6 +173,11 @@ const Game1 = () => {
     if (!context || video.videoWidth === 0 || video.videoHeight === 0) {
       analyzingRef.current = false;
       setIsAnalyzing(false);
+      toast({
+        title: "Không nhìn thấy khuôn mặt",
+        description: "Hãy điều chỉnh vị trí hoặc ánh sáng để camera nhìn thấy khuôn mặt rõ hơn.",
+        variant: "destructive"
+      });
       return;
     }
 
@@ -197,10 +200,11 @@ const Game1 = () => {
       setIsCorrect(correct);
 
       if (correct) {
-        setScore(prev => prev + 1);
+        setScore(prev => prev + 10);
         toast({
-          title: "🎉 Hoàn hảo!",
-          description: result.message ?? "Bạn đã làm đúng! Làm tốt lắm!",
+          title: "Chính xác! Bạn đã thể hiện đúng cảm xúc!",
+          description: "🎉 Tuyệt vời lắm! +10 điểm",
+          className: "bg-green-50 border-green-500 text-green-900"
         });
 
         setTimeout(() => {
@@ -210,36 +214,28 @@ const Game1 = () => {
         }, 3000);
       } else {
         toast({
-          title: "Chưa đúng rồi!",
-          description: result.message ?? "Hãy thử lại cảm xúc này nhé!",
-          variant: "destructive"
+          title: "Chưa đúng. Hãy thử lại nhé!",
+          description: predicted ? `Bạn đang thể hiện cảm xúc ${predicted}. Hãy cố gắng thêm nào!` : "Hãy quan sát kỹ hình mẫu và thử lại!",
+          className: "bg-orange-50 border-orange-500 text-orange-900"
         });
         setIsCorrect(null);
         setDetectedEmotion(null);
       }
     } catch (error) {
       toast({
-        title: "Có lỗi khi gửi ảnh",
-        description: error instanceof Error ? error.message : "Vui lòng đảm bảo backend đang chạy.",
+        title: "Không thể nhận diện khuôn mặt",
+        description: "Hãy điều chỉnh vị trí hoặc ánh sáng để camera nhìn thấy khuôn mặt rõ hơn.",
         variant: "destructive"
       });
+      analyzingRef.current = false;
+      setIsAnalyzing(false);
     } finally {
       analyzingRef.current = false;
       setIsAnalyzing(false);
     }
   }, [currentChallenge, fetchChallenge, toast]);
 
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    
-    if (isStreaming && !isCorrect) {
-      interval = setInterval(captureAndAnalyze, 2000);
-    }
-
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [isStreaming, isCorrect, captureAndAnalyze]);
+  // Remove auto-capture interval - manual capture only
 
   useEffect(() => {
     fetchChallenge();
@@ -306,10 +302,17 @@ const Game1 = () => {
                 )}
               </div>
             ) : (
-              <div className="space-y-5 text-center flex-1 flex flex-col justify-center animate-celebration">
-                <Sparkles className="w-24 h-24 mx-auto text-[#5c3f7f] animate-spin" />
-                <h2 className="text-4xl font-bold text-[#4a3562]">
-                  🎉 Tuyệt vời! Bạn đã làm được! 🎉
+              <div className="space-y-5 text-center flex-1 flex flex-col justify-center animate-celebration relative">
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="text-8xl animate-bounce">⭐</div>
+                  <div className="text-6xl animate-pulse absolute top-10 left-10">✨</div>
+                  <div className="text-6xl animate-pulse absolute top-10 right-10">✨</div>
+                  <div className="text-6xl animate-pulse absolute bottom-10 left-20">⭐</div>
+                  <div className="text-6xl animate-pulse absolute bottom-10 right-20">⭐</div>
+                </div>
+                <Sparkles className="w-24 h-24 mx-auto text-yellow-500 animate-spin" />
+                <h2 className="text-4xl font-bold text-green-700">
+                  🎉 Chính xác! Bạn đã thể hiện đúng cảm xúc! 🎉
                 </h2>
                 <p className="text-2xl text-[#4a3562]/80">
                   Đó là một khuôn mặt {currentChallenge.vietnamese} hoàn hảo!
@@ -331,23 +334,39 @@ const Game1 = () => {
                   <span className="font-semibold">Trạng thái</span>
                   <span className="text-sm font-semibold">{isStreaming ? "Đang quay" : "Chưa quay"}</span>
                 </div>
-                <div className="grid grid-cols-2 gap-3 pt-1">
-                  <Button
-                    onClick={startCamera}
-                    disabled={isStreaming || isFetchingChallenge}
-                    className="bg-[#4a3562] text-[#f7edce] hover:bg-[#3c2c50]"
-                  >
-                    <Camera className="w-5 h-5 mr-2" />
-                    Bắt đầu
-                  </Button>
-                  <Button
-                    onClick={stopCamera}
-                    variant="destructive"
-                    disabled={!isStreaming || isAnalyzing}
-                  >
-                    <CameraOff className="w-5 h-5 mr-2" />
-                    Dừng lại
-                  </Button>
+                <div className="space-y-3 pt-1">
+                  {!isStreaming ? (
+                    <Button
+                      onClick={startCamera}
+                      disabled={isFetchingChallenge}
+                      className="w-full bg-[#4a3562] text-[#f7edce] hover:bg-[#3c2c50] text-lg py-6"
+                      size="lg"
+                    >
+                      <Camera className="w-5 h-5 mr-2" />
+                      Bắt đầu thử thách
+                    </Button>
+                  ) : (
+                    <>
+                      <Button
+                        onClick={captureAndAnalyze}
+                        disabled={isAnalyzing || isFetchingChallenge}
+                        className="w-full bg-green-600 text-white hover:bg-green-700 text-lg py-6"
+                        size="lg"
+                      >
+                        <Camera className="w-5 h-5 mr-2" />
+                        {isAnalyzing ? "Đang kiểm tra..." : "Chụp và kiểm tra"}
+                      </Button>
+                      <Button
+                        onClick={stopCamera}
+                        variant="destructive"
+                        disabled={isAnalyzing}
+                        className="w-full"
+                      >
+                        <CameraOff className="w-5 h-5 mr-2" />
+                        Dừng lại
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -357,7 +376,7 @@ const Game1 = () => {
                 {!isStreaming ? (
                   <div className="text-center space-y-3 p-6 text-[#4a3562]/80">
                     <Camera className="w-16 h-16 mx-auto" />
-                    <p className="text-lg">Nhấn Bắt đầu để bật camera và thể hiện cảm xúc giống ảnh.</p>
+                    <p className="text-lg">Nhấn "Bắt đầu thử thách" để khởi động camera. Sau đó quan sát hình mẫu và bắt chước lại cảm xúc đó!</p>
                   </div>
                 ) : (
                   <>

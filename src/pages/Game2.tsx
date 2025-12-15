@@ -89,8 +89,8 @@ const Game2 = () => {
       streamRef.current = stream;
       setIsStreaming(true);
       toast({
-        title: "Giờ kể chuyện! 📖",
-        description: "Hãy thể hiện cảm xúc phù hợp cho mỗi câu chuyện!"
+        title: "Đã bật camera! 📸",
+        description: "Đọc tình huống, suy nghĩ về cảm xúc phù hợp, thể hiện nó, rồi nhấn 'Chụp và kiểm tra'!"
       });
     } catch (error) {
       toast({
@@ -144,6 +144,11 @@ const Game2 = () => {
     if (!context || video.videoWidth === 0 || video.videoHeight === 0) {
       analyzingRef.current = false;
       setIsAnalyzing(false);
+      toast({
+        title: "Không nhìn thấy khuôn mặt",
+        description: "Hãy điều chỉnh vị trí hoặc ánh sáng để camera nhìn thấy khuôn mặt rõ hơn.",
+        variant: "destructive"
+      });
       return;
     }
 
@@ -163,10 +168,11 @@ const Game2 = () => {
       const correct = !!result.is_correct;
       if (correct) {
         setIsCorrect(true);
-        setScore(prev => prev + 1);
+        setScore(prev => prev + 10);
         toast({
-          title: "🎉 Xuất sắc!",
-          description: result.message ?? "Bạn đã hiểu câu chuyện một cách hoàn hảo!",
+          title: "🎉 Tuyệt vời!",
+          description: result.message ?? "Bạn đã thể hiện đúng cảm xúc cho tình huống này!",
+          className: "bg-green-50 border-green-500 text-green-900"
         });
 
         setTimeout(() => {
@@ -175,37 +181,30 @@ const Game2 = () => {
           fetchScenario();
         }, 3000);
       } else {
+        // Educational feedback showing what they did vs what was expected
         toast({
           title: "Chưa đúng! 🤔",
-          description: result.message ?? "Hãy thử lại! Nghĩ xem bạn sẽ cảm thấy như thế nào.",
-          variant: "destructive"
+          description: result.message ?? "Hãy thử lại! Nghĩ xem bạn sẽ cảm thấy như thế nào trong tình huống này.",
+          className: "bg-orange-50 border-orange-500 text-orange-900"
         });
         setIsCorrect(null);
         setDetectedEmotion(null);
       }
     } catch (error) {
       toast({
-        title: "Có lỗi khi gửi ảnh",
-        description: error instanceof Error ? error.message : "Vui lòng đảm bảo backend đang chạy.",
+        title: "Không thể nhận diện khuôn mặt",
+        description: "Hãy điều chỉnh vị trí hoặc ánh sáng để camera nhìn thấy khuôn mặt rõ hơn.",
         variant: "destructive"
       });
+      analyzingRef.current = false;
+      setIsAnalyzing(false);
     } finally {
       analyzingRef.current = false;
       setIsAnalyzing(false);
     }
   }, [currentScenario, fetchScenario, isCorrect, toast]);
 
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    
-    if (isStreaming && !isCorrect) {
-      interval = setInterval(captureAndAnalyze, 2000);
-    }
-
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [isStreaming, isCorrect, captureAndAnalyze]);
+  // Remove auto-capture interval - manual capture only
 
   useEffect(() => {
     fetchScenario();
@@ -289,9 +288,16 @@ const Game2 = () => {
                 )}
               </div>
             ) : (
-              <div className="space-y-4 text-center flex-1 flex flex-col justify-center animate-celebration">
-                <Sparkles className="w-24 h-24 mx-auto text-[#5c3f7f] animate-spin" />
-                <h2 className="text-4xl font-bold text-[#4a3562]">
+              <div className="space-y-4 text-center flex-1 flex flex-col justify-center animate-celebration relative">
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="text-8xl animate-bounce">⭐</div>
+                  <div className="text-6xl animate-pulse absolute top-10 left-10">✨</div>
+                  <div className="text-6xl animate-pulse absolute top-10 right-10">✨</div>
+                  <div className="text-6xl animate-pulse absolute bottom-10 left-20">⭐</div>
+                  <div className="text-6xl animate-pulse absolute bottom-10 right-20">⭐</div>
+                </div>
+                <Sparkles className="w-24 h-24 mx-auto text-yellow-500 animate-spin" />
+                <h2 className="text-4xl font-bold text-green-700">
                   🌟 Hoàn hảo! Bạn thật thông minh! 🌟
                 </h2>
                 <p className="text-2xl text-[#4a3562]/80">
@@ -314,23 +320,39 @@ const Game2 = () => {
                   <span className="font-semibold">Trạng thái</span>
                   <span className="text-sm font-semibold">{isStreaming ? "Đang quay" : "Chưa quay"}</span>
                 </div>
-                <div className="grid grid-cols-2 gap-3 pt-1">
-                  <Button
-                    onClick={startCamera}
-                    disabled={isStreaming || isFetchingScenario}
-                    className="bg-[#4a3562] text-[#f7edce] hover:bg-[#3c2c50]"
-                  >
-                    <Camera className="w-5 h-5 mr-2" />
-                    Bắt đầu
-                  </Button>
-                  <Button
-                    onClick={stopCamera}
-                    variant="destructive"
-                    disabled={!isStreaming || isAnalyzing}
-                  >
-                    <CameraOff className="w-5 h-5 mr-2" />
-                    Dừng lại
-                  </Button>
+                <div className="space-y-3 pt-1">
+                  {!isStreaming ? (
+                    <Button
+                      onClick={startCamera}
+                      disabled={isFetchingScenario}
+                      className="w-full bg-[#4a3562] text-[#f7edce] hover:bg-[#3c2c50] text-lg py-6"
+                      size="lg"
+                    >
+                      <Camera className="w-5 h-5 mr-2" />
+                      Bắt đầu thử thách
+                    </Button>
+                  ) : (
+                    <>
+                      <Button
+                        onClick={captureAndAnalyze}
+                        disabled={isAnalyzing || isFetchingScenario}
+                        className="w-full bg-green-600 text-white hover:bg-green-700 text-lg py-6"
+                        size="lg"
+                      >
+                        <Camera className="w-5 h-5 mr-2" />
+                        {isAnalyzing ? "Đang kiểm tra..." : "Chụp và kiểm tra"}
+                      </Button>
+                      <Button
+                        onClick={stopCamera}
+                        variant="destructive"
+                        disabled={isAnalyzing}
+                        className="w-full"
+                      >
+                        <CameraOff className="w-5 h-5 mr-2" />
+                        Dừng lại
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -340,7 +362,7 @@ const Game2 = () => {
                 {!isStreaming ? (
                   <div className="text-center space-y-3 p-6 text-[#4a3562]/80">
                     <Camera className="w-16 h-16 mx-auto" />
-                    <p className="text-lg">Nhấn Bắt đầu để bật camera và thể hiện cảm xúc cho câu chuyện.</p>
+                    <p className="text-lg">Nhấn "Bắt đầu thử thách" để khởi động camera. Đọc tình huống, suy nghĩ về cảm xúc phù hợp và thể hiện nó!</p>
                   </div>
                 ) : (
                   <>

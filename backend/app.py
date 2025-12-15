@@ -171,7 +171,8 @@ def predict():
     if detected_emotion is None:
         return jsonify({
             'emotion': 'Không nhận diện được',
-            'success': False
+            'success': False,
+            'message': 'Không thể nhận diện khuôn mặt. Hãy điều chỉnh vị trí hoặc ánh sáng để camera nhìn thấy khuôn mặt rõ hơn.'
         })
     
     # Gộp Disgust và Fear thành Fear
@@ -193,8 +194,17 @@ def predict():
             'Angry': 'Giận',
             'Fear': 'Sợ hãi',
             'Suprise': 'Ngạc nhiên',
-            'Neutral': 'Trung tính'
+            'Neutral': 'Trung tính',
+            'Disgust': 'Sợ hãi'
         }
+        
+        detected_vn = emotion_vietnamese.get(normalized_detected, normalized_detected)
+        required_vn = emotion_vietnamese.get(normalized_required, normalized_required)
+        
+        if is_correct:
+            message = f"Chính xác! Bạn đã thể hiện đúng cảm xúc!"
+        else:
+            message = f"Chưa đúng. Hãy thử lại nhé!"
         
         return jsonify({
             'emotion': normalized_detected,
@@ -202,7 +212,8 @@ def predict():
             'is_correct': is_correct,
             'success': True,
             'confidence': confidence_score,
-            'vietnamese': emotion_vietnamese.get(normalized_detected, normalized_detected)
+            'vietnamese': detected_vn,
+            'message': message
         })
     
     # Trả về kết quả đơn giản (không có yêu cầu)
@@ -224,8 +235,8 @@ def predict():
 @app.route('/get-emotion-challenge', methods=['GET'])
 def get_emotion_challenge():
     """API trả về cảm xúc ngẫu nhiên cho Game 1"""
-    # Danh sách cảm xúc (đã gộp Disgust với Fear)
-    emotions_list = ['Happy', 'Sad', 'Angry', 'Fear', 'Suprise', 'Neutral']
+    # Danh sách 5 cảm xúc cơ bản cho Game 1 (không có Neutral, đã gộp Disgust với Fear)
+    emotions_list = ['Happy', 'Sad', 'Angry', 'Fear', 'Suprise']
     emotion = random.choice(emotions_list)
     
     emotion_info = {
@@ -233,8 +244,7 @@ def get_emotion_challenge():
         'Sad': {'emoji': '😢', 'vietnamese': 'Buồn'},
         'Angry': {'emoji': '😠', 'vietnamese': 'Giận'},
         'Fear': {'emoji': '😨', 'vietnamese': 'Sợ hãi'},
-        'Suprise': {'emoji': '😲', 'vietnamese': 'Ngạc nhiên'},
-        'Neutral': {'emoji': '😐', 'vietnamese': 'Trung tính'}
+        'Suprise': {'emoji': '😲', 'vietnamese': 'Ngạc nhiên'}
     }
     
     info = emotion_info.get(emotion, {'emoji': '😊', 'vietnamese': emotion})
