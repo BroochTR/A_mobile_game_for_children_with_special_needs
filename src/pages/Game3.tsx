@@ -1,9 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowLeft, RotateCcw, Trophy, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
 import { playFlipSound, playMatchSound, playWinSound, playBackgroundMusic, stopBackgroundMusic } from "@/lib/sounds";
 import { SoundToggle } from "@/components/SoundToggle";
 
@@ -91,7 +90,9 @@ const Game3 = () => {
   const [timeElapsed, setTimeElapsed] = useState(0);
   const [timerRunning, setTimerRunning] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
-  const { toast } = useToast();
+  const [notification, setNotification] = useState<{ message: string; type: 'success' | 'info' } | null>(null);
+  const [musicStarted, setMusicStarted] = useState(false);
+  const notificationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
@@ -110,11 +111,9 @@ const Game3 = () => {
     setMatchedPairs(0);
     setTimeElapsed(0);
     setTimerRunning(false);
-    toast({
-      title: "🎮 Trò chơi mới!",
-      description: "Hãy tìm các cặp cảm xúc giống nhau!",
-    });
-  }, [toast]);
+    setMusicStarted(false);
+    setNotification(null);
+  }, []);
 
   const handleCardClick = (cardId: number) => {
     if (isChecking) return;
@@ -124,7 +123,11 @@ const Game3 = () => {
     if (!card || card.isFlipped || card.isMatched) return;
     if (!timerRunning) setTimerRunning(true);
 
-    // Play flip sound
+    if (!musicStarted) {
+      playBackgroundMusic();
+      setMusicStarted(true);
+    }
+
     playFlipSound();
 
     const newCards = cards.map(c =>
@@ -144,9 +147,14 @@ const Game3 = () => {
       const secondCard = cards.find(c => c.id === secondId);
 
       if (firstCard && secondCard && firstCard.emotion === secondCard.emotion) {
-        // Match found!
-        // Play match sound
-        playMatchSound();
+        if (notificationTimeoutRef.current) {
+          clearTimeout(notificationTimeoutRef.current);
+        }
+        
+        setTimeout(() => {
+          playMatchSound();
+          setNotification({ message: `Đã tìm thấy cặp ${firstCard.vietnamese}`, type: 'success' });
+        }, 500);
         
         setTimeout(() => {
           setCards(prev =>
@@ -159,12 +167,12 @@ const Game3 = () => {
           setFlippedCards([]);
           setIsChecking(false);
           setMatchedPairs(prev => prev + 1);
-          
-          toast({
-            title: `🎉 Tuyệt vời!`,
-            description: `Bạn đã tìm thấy cặp ${firstCard.vietnamese}!`,
-          });
         }, 600);
+        
+        notificationTimeoutRef.current = setTimeout(() => {
+          setNotification(null);
+          notificationTimeoutRef.current = null;
+        }, 2500);
       } else {
         // No match
         setTimeout(() => {
@@ -180,20 +188,15 @@ const Game3 = () => {
         }, 1000);
       }
     }
-  }, [flippedCards, cards, toast]);
+  }, [flippedCards, cards]);
 
   useEffect(() => {
     if (matchedPairs === EMOTIONS.length && matchedPairs > 0) {
       setGameWon(true);
-      // Play win sound
       playWinSound();
-      toast({
-        title: "🏆 Chúc mừng!",
-        description: `Bạn đã hoàn thành với ${moves} lượt!`,
-      });
       setTimerRunning(false);
     }
-  }, [matchedPairs, moves, toast]);
+  }, [matchedPairs, moves]);
 
   useEffect(() => {
     if (!timerRunning || gameWon) return;
@@ -202,7 +205,6 @@ const Game3 = () => {
   }, [timerRunning, gameWon]);
 
   useEffect(() => {
-    playBackgroundMusic();
     return () => {
       stopBackgroundMusic();
     };
@@ -305,23 +307,30 @@ const Game3 = () => {
               </div>
             </Card>
           ) : (
-            <Card className="p-12 bg-gradient-to-br from-success/10 to-accent/10 border-success/50 text-center animate-celebration rounded-3xl shadow-card">
-              <div className="space-y-6">
-                <Sparkles className="w-24 h-24 mx-auto text-success animate-spin" />
-                <Trophy className="w-20 h-20 mx-auto text-accent" />
-                <h2 className="text-4xl font-bold text-foreground">
-                  🎉 Xuất sắc! 🎉
+            <Card className="p-12 bg-[#f7edce] border-[#d7c38e] text-center animate-celebration rounded-3xl shadow-[0_12px_30px_rgba(74,53,98,0.12)] relative overflow-hidden">
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
+                <div className="text-9xl animate-bounce">⭐</div>
+                <div className="text-7xl animate-pulse absolute top-10 left-10">✨</div>
+                <div className="text-7xl animate-pulse absolute top-10 right-10">✨</div>
+                <div className="text-7xl animate-pulse absolute bottom-10 left-20">⭐</div>
+                <div className="text-7xl animate-pulse absolute bottom-10 right-20">⭐</div>
+              </div>
+              <div className="space-y-6 relative">
+                <Sparkles className="w-24 h-24 mx-auto text-[#fcbf25] animate-spin" />
+                <Trophy className="w-20 h-20 mx-auto text-[#fcbf25]" />
+                <h2 className="text-4xl font-bold text-[#4a3562]">
+                  Xuất sắc!
                 </h2>
-                <p className="text-2xl text-success">
+                <p className="text-2xl text-[#7a59a4] font-semibold">
                   Bạn đã ghép đúng tất cả {EMOTIONS.length} cặp cảm xúc!
                 </p>
-                <p className="text-xl text-muted-foreground">
+                <p className="text-xl text-[#4a3562]">
                   Hoàn thành với {moves} lượt chơi
                 </p>
                 <Button 
                   size="lg"
                   onClick={resetGame}
-                  className="text-xl px-8 py-6 bg-gradient-to-r from-primary to-accent hover:opacity-90 rounded-full"
+                  className="text-xl px-8 py-6 bg-[#4a3562] text-[#f7edce] hover:bg-[#3c2c50] rounded-full"
                 >
                   <RotateCcw className="w-6 h-6 mr-2" />
                   Chơi lại
@@ -331,7 +340,7 @@ const Game3 = () => {
           )}
 
           {/* Sidebar */}
-          <div className="w-full">
+          <div className="w-full space-y-4">
             <div className="bg-[#fcbf25] text-[#4a3562] rounded-3xl shadow-[0_14px_28px_rgba(74,53,98,0.25)] p-6 relative overflow-hidden">
               <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-16 h-16 bg-[#f7edce] rounded-full opacity-30" />
               <div className="space-y-4 relative">
@@ -355,6 +364,15 @@ const Game3 = () => {
                 </Button>
               </div>
             </div>
+            
+            {/* Notification Box */}
+            {notification && (
+              <div className="bg-[#7a59a4] text-white rounded-3xl shadow-[0_14px_28px_rgba(74,53,98,0.25)] p-6">
+                <p className="text-center font-semibold text-lg">
+                  {notification.message}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -40,6 +40,17 @@ const EMOTION_INSTRUCTIONS: Record<string, string> = {
   Fear: "Hãy làm mặt sợ hãi"
 };
 
+const EMOTION_VIETNAMESE: Record<string, string> = {
+  Happy: "Vui vẻ",
+  Sad: "Buồn",
+  Angry: "Giận dữ",
+  Surprise: "Ngạc nhiên",
+  Suprise: "Ngạc nhiên",
+  Fear: "Sợ hãi",
+  Neutral: "Trung tính",
+  Disgust: "Ghê tởm"
+};
+
 const FALLBACK_CHALLENGES: Challenge[] = Object.entries(EMOTION_ASSETS)
   .map(([key, meta]) => {
     const emotionTitle = key.charAt(0).toUpperCase() + key.slice(1);
@@ -217,11 +228,11 @@ const Game1 = () => {
           fetchChallenge();
         }, 3000);
       } else {
-        // Play wrong sound
         playWrongSound();
+        const detectedVN = predicted ? EMOTION_VIETNAMESE[predicted] || predicted : null;
         toast({
           title: "Chưa đúng. Hãy thử lại nhé!",
-          description: predicted ? `Bạn đang thể hiện cảm xúc ${predicted}. Hãy cố gắng thêm nào!` : "Hãy quan sát kỹ hình mẫu và thử lại!",
+          description: detectedVN ? `Bạn đang thể hiện cảm xúc ${detectedVN}. Hãy cố gắng thêm nào!` : "Hãy quan sát kỹ hình mẫu và thử lại!",
           className: "bg-orange-50 border-orange-500 text-orange-900"
         });
         setIsCorrect(null);
@@ -229,7 +240,7 @@ const Game1 = () => {
       }
     } catch (error) {
       toast({
-        title: "Không thể nhận diện khuôn mặt",
+        title: "Không nhận diện được cảm xúc của bạn",
         description: "Hãy điều chỉnh vị trí hoặc ánh sáng để camera nhìn thấy khuôn mặt rõ hơn.",
         variant: "destructive"
       });
@@ -312,18 +323,18 @@ const Game1 = () => {
               </div>
             ) : (
               <div className="space-y-5 text-center flex-1 flex flex-col justify-center animate-celebration relative">
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
                   <div className="text-8xl animate-bounce">⭐</div>
                   <div className="text-6xl animate-pulse absolute top-10 left-10">✨</div>
                   <div className="text-6xl animate-pulse absolute top-10 right-10">✨</div>
                   <div className="text-6xl animate-pulse absolute bottom-10 left-20">⭐</div>
                   <div className="text-6xl animate-pulse absolute bottom-10 right-20">⭐</div>
                 </div>
-                <Sparkles className="w-24 h-24 mx-auto text-yellow-500 animate-spin" />
-                <h2 className="text-4xl font-bold text-green-700">
-                  🎉 Chính xác! Bạn đã thể hiện đúng cảm xúc! 🎉
+                <Sparkles className="w-24 h-24 mx-auto text-[#fcbf25] animate-spin" />
+                <h2 className="text-4xl font-bold text-[#4a3562]">
+                  Chính xác! Bạn đã thể hiện đúng cảm xúc!
                 </h2>
-                <p className="text-2xl text-[#4a3562]/80">
+                <p className="text-2xl text-[#7a59a4] font-semibold">
                   Đó là một khuôn mặt {currentChallenge.vietnamese} hoàn hảo!
                 </p>
               </div>

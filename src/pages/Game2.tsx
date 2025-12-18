@@ -183,7 +183,6 @@ const Game2 = () => {
       if (correct) {
         setIsCorrect(true);
         setScore(prev => prev + 10);
-        // Play correct sound
         playCorrectSound();
         toast({
           title: "🎉 Tuyệt vời!",
@@ -197,8 +196,6 @@ const Game2 = () => {
           fetchScenario();
         }, 3000);
       } else {
-        // Educational feedback showing what they did vs what was expected
-        // Play wrong sound
         playWrongSound();
         toast({
           title: "Chưa đúng! 🤔",
@@ -210,7 +207,7 @@ const Game2 = () => {
       }
     } catch (error) {
       toast({
-        title: "Không thể nhận diện khuôn mặt",
+        title: "Không nhận diện được cảm xúc của bạn",
         description: "Hãy điều chỉnh vị trí hoặc ánh sáng để camera nhìn thấy khuôn mặt rõ hơn.",
         variant: "destructive"
       });
@@ -295,12 +292,12 @@ const Game2 = () => {
                     size="lg"
                     className="text-lg rounded-full border-[#4a3562] text-[#4a3562] hover:bg-[#4a3562]/10"
                   >
-                    💡 Cần gợi ý?
+                    Cần gợi ý?
                   </Button>
                 )}
 
                 {showHint && (
-                  <Card className="p-6 bg-white border-[#7a59a4]/40 inline-block rounded-2xl">
+                  <Card className="p-6 bg-[#fcbf25] border-[#d7c38e] inline-block rounded-2xl shadow-[0_8px_20px_rgba(74,53,98,0.15)]">
                     <div className="text-6xl mb-2">{currentScenario.emoji}</div>
                     <p className="text-xl text-[#4a3562] font-semibold">
                       Hãy thể hiện cảm xúc {EMOTION_VIETNAMESE[currentScenario.correct_emotion] || currentScenario.correct_emotion}!
@@ -310,18 +307,18 @@ const Game2 = () => {
               </div>
             ) : (
               <div className="space-y-4 text-center flex-1 flex flex-col justify-center animate-celebration relative">
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
                   <div className="text-8xl animate-bounce">⭐</div>
                   <div className="text-6xl animate-pulse absolute top-10 left-10">✨</div>
                   <div className="text-6xl animate-pulse absolute top-10 right-10">✨</div>
                   <div className="text-6xl animate-pulse absolute bottom-10 left-20">⭐</div>
                   <div className="text-6xl animate-pulse absolute bottom-10 right-20">⭐</div>
                 </div>
-                <Sparkles className="w-24 h-24 mx-auto text-yellow-500 animate-spin" />
-                <h2 className="text-4xl font-bold text-green-700">
-                  🌟 Hoàn hảo! Bạn thật thông minh! 🌟
+                <Sparkles className="w-24 h-24 mx-auto text-[#fcbf25] animate-spin" />
+                <h2 className="text-4xl font-bold text-[#4a3562]">
+                  Hoàn hảo! Bạn thật thông minh!
                 </h2>
-                <p className="text-2xl text-[#4a3562]/80">
+                <p className="text-2xl text-[#7a59a4] font-semibold">
                   Đó chính xác là cách tôi cũng sẽ cảm thấy!
                 </p>
               </div>
