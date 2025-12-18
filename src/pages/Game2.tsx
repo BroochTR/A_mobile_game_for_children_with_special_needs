@@ -5,6 +5,20 @@ import { ArrowLeft, Camera, CameraOff, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { detectEmotionForScenario, getScenario, type Scenario } from "@/lib/api";
+import { playCorrectSound, playWrongSound } from "@/lib/sounds";
+import { SoundEffectsToggle } from "@/components/SoundEffectsToggle";
+
+// Mapping từ tiếng Anh sang tiếng Việt
+const EMOTION_VIETNAMESE: Record<string, string> = {
+  'Happy': 'Vui vẻ',
+  'Sad': 'Buồn',
+  'Angry': 'Giận dữ',
+  'Fear': 'Sợ hãi',
+  'Suprise': 'Ngạc nhiên',
+  'Surprise': 'Ngạc nhiên',
+  'Neutral': 'Trung tính',
+  'Disgust': 'Ghê tởm'
+};
 
 const FALLBACK_SCENARIOS: Scenario[] = [
   {
@@ -169,6 +183,8 @@ const Game2 = () => {
       if (correct) {
         setIsCorrect(true);
         setScore(prev => prev + 10);
+        // Play correct sound
+        playCorrectSound();
         toast({
           title: "🎉 Tuyệt vời!",
           description: result.message ?? "Bạn đã thể hiện đúng cảm xúc cho tình huống này!",
@@ -182,6 +198,8 @@ const Game2 = () => {
         }, 3000);
       } else {
         // Educational feedback showing what they did vs what was expected
+        // Play wrong sound
+        playWrongSound();
         toast({
           title: "Chưa đúng! 🤔",
           description: result.message ?? "Hãy thử lại! Nghĩ xem bạn sẽ cảm thấy như thế nào trong tình huống này.",
@@ -231,21 +249,24 @@ const Game2 = () => {
             <p className="text-sm uppercase tracking-[0.2em] text-[#b07b16]">Story Time</p>
             <h1 className="text-3xl md:text-4xl font-bold text-[#4a3562]">Cảm Xúc Theo Câu Chuyện</h1>
           </div>
-          <div className="relative">
-            <button
-              className="w-10 h-10 rounded-full bg-[#4a3562] text-white flex items-center justify-center shadow-lg hover:bg-[#3c2c50] transition"
-              onClick={() => setShowGuide((prev) => !prev)}
-            >
-              <span className="text-lg font-semibold">?</span>
-            </button>
-            {showGuide && (
-              <div className="absolute right-0 mt-2 w-72 bg-white text-[#4a3562] rounded-2xl shadow-xl border border-[#d7c38e] p-4 z-10">
-                <p className="text-sm font-semibold mb-1">Cách chơi</p>
-                <p className="text-sm leading-relaxed">
-                  Đọc câu chuyện, đoán cảm xúc phù hợp và thể hiện bằng khuôn mặt. Bấm Bắt đầu để bật camera, có thể mở gợi ý nếu cần.
-                </p>
-              </div>
-            )}
+          <div className="flex gap-2 items-center">
+            <SoundEffectsToggle />
+            <div className="relative">
+              <button
+                className="w-10 h-10 rounded-full bg-[#4a3562] text-white flex items-center justify-center shadow-lg hover:bg-[#3c2c50] transition"
+                onClick={() => setShowGuide((prev) => !prev)}
+              >
+                <span className="text-lg font-semibold">?</span>
+              </button>
+              {showGuide && (
+                <div className="absolute right-0 mt-2 w-72 bg-white text-[#4a3562] rounded-2xl shadow-xl border border-[#d7c38e] p-4 z-10">
+                  <p className="text-sm font-semibold mb-1">Cách chơi</p>
+                  <p className="text-sm leading-relaxed">
+                    Đọc câu chuyện, đoán cảm xúc phù hợp và thể hiện bằng khuôn mặt. Bấm Bắt đầu để bật camera, có thể mở gợi ý nếu cần.
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -282,7 +303,7 @@ const Game2 = () => {
                   <Card className="p-6 bg-white border-[#7a59a4]/40 inline-block rounded-2xl">
                     <div className="text-6xl mb-2">{currentScenario.emoji}</div>
                     <p className="text-xl text-[#4a3562] font-semibold">
-                      Hãy thể hiện cảm xúc {currentScenario.correct_emotion}!
+                      Hãy thể hiện cảm xúc {EMOTION_VIETNAMESE[currentScenario.correct_emotion] || currentScenario.correct_emotion}!
                     </p>
                   </Card>
                 )}

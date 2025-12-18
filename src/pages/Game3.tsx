@@ -4,6 +4,8 @@ import { Card } from "@/components/ui/card";
 import { ArrowLeft, RotateCcw, Trophy, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { playFlipSound, playMatchSound, playWinSound, playBackgroundMusic, stopBackgroundMusic } from "@/lib/sounds";
+import { SoundToggle } from "@/components/SoundToggle";
 
 type EmotionCard = {
   id: number;
@@ -122,6 +124,9 @@ const Game3 = () => {
     if (!card || card.isFlipped || card.isMatched) return;
     if (!timerRunning) setTimerRunning(true);
 
+    // Play flip sound
+    playFlipSound();
+
     const newCards = cards.map(c =>
       c.id === cardId ? { ...c, isFlipped: true } : c
     );
@@ -140,6 +145,9 @@ const Game3 = () => {
 
       if (firstCard && secondCard && firstCard.emotion === secondCard.emotion) {
         // Match found!
+        // Play match sound
+        playMatchSound();
+        
         setTimeout(() => {
           setCards(prev =>
             prev.map(c =>
@@ -177,6 +185,8 @@ const Game3 = () => {
   useEffect(() => {
     if (matchedPairs === EMOTIONS.length && matchedPairs > 0) {
       setGameWon(true);
+      // Play win sound
+      playWinSound();
       toast({
         title: "🏆 Chúc mừng!",
         description: `Bạn đã hoàn thành với ${moves} lượt!`,
@@ -190,6 +200,13 @@ const Game3 = () => {
     const timer = setInterval(() => setTimeElapsed(prev => prev + 1), 1000);
     return () => clearInterval(timer);
   }, [timerRunning, gameWon]);
+
+  useEffect(() => {
+    playBackgroundMusic();
+    return () => {
+      stopBackgroundMusic();
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#f2e1bb] text-[#4a3562] relative overflow-hidden">
@@ -208,22 +225,25 @@ const Game3 = () => {
             <p className="text-sm uppercase tracking-[0.2em] text-[#b07b16]">Memory Game</p>
             <h1 className="text-3xl md:text-4xl font-bold text-[#4a3562]">Tìm Cặp Cảm Xúc</h1>
           </div>
-          <div className="relative">
-            <button
-              className="w-10 h-10 rounded-full bg-[#4a3562] text-white flex items-center justify-center shadow-lg hover:bg-[#3c2c50] transition"
-              onClick={() => setShowGuide((prev) => !prev)}
-            >
-              <span className="text-lg font-semibold">?</span>
-            </button>
-            {showGuide && (
-              <div className="absolute right-0 mt-2 w-64 bg-white text-[#4a3562] rounded-2xl shadow-xl border border-[#d7c38e] p-4 z-10">
-                <p className="text-sm font-semibold mb-1">Cách chơi</p>
-                <p className="text-sm leading-relaxed">
-                  Lật 2 thẻ để tìm cặp cảm xúc giống nhau. Khi ghép đúng, thẻ sẽ biến mất.
-                  Nhớ vị trí các thẻ để hoàn thành nhanh nhất!
-                </p>
-              </div>
-            )}
+          <div className="flex gap-2 items-center">
+            <SoundToggle />
+            <div className="relative">
+              <button
+                className="w-10 h-10 rounded-full bg-[#4a3562] text-white flex items-center justify-center shadow-lg hover:bg-[#3c2c50] transition"
+                onClick={() => setShowGuide((prev) => !prev)}
+              >
+                <span className="text-lg font-semibold">?</span>
+              </button>
+              {showGuide && (
+                <div className="absolute right-0 mt-2 w-64 bg-white text-[#4a3562] rounded-2xl shadow-xl border border-[#d7c38e] p-4 z-10">
+                  <p className="text-sm font-semibold mb-1">Cách chơi</p>
+                  <p className="text-sm leading-relaxed">
+                    Lật 2 thẻ để tìm cặp cảm xúc giống nhau. Khi ghép đúng, thẻ sẽ biến mất.
+                    Nhớ vị trí các thẻ để hoàn thành nhanh nhất!
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

@@ -5,6 +5,8 @@ import { ArrowLeft, Camera, CameraOff, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { detectEmotionForChallenge, getEmotionChallenge, type EmotionChallenge } from "@/lib/api";
+import { playCorrectSound, playWrongSound } from "@/lib/sounds";
+import { SoundEffectsToggle } from "@/components/SoundEffectsToggle";
 
 type Challenge = EmotionChallenge & { description: string; imageUrl: string };
 
@@ -201,6 +203,8 @@ const Game1 = () => {
 
       if (correct) {
         setScore(prev => prev + 10);
+        // Play correct sound
+        playCorrectSound();
         toast({
           title: "Chính xác! Bạn đã thể hiện đúng cảm xúc!",
           description: "🎉 Tuyệt vời lắm! +10 điểm",
@@ -213,6 +217,8 @@ const Game1 = () => {
           fetchChallenge();
         }, 3000);
       } else {
+        // Play wrong sound
+        playWrongSound();
         toast({
           title: "Chưa đúng. Hãy thử lại nhé!",
           description: predicted ? `Bạn đang thể hiện cảm xúc ${predicted}. Hãy cố gắng thêm nào!` : "Hãy quan sát kỹ hình mẫu và thử lại!",
@@ -262,21 +268,24 @@ const Game1 = () => {
             <p className="text-sm uppercase tracking-[0.2em] text-[#b07b16]">Emotion Mimic</p>
             <h1 className="text-3xl md:text-4xl font-bold text-[#4a3562]">Bắt Chước Cảm Xúc</h1>
           </div>
-          <div className="relative">
-            <button
-              className="w-10 h-10 rounded-full bg-[#4a3562] text-white flex items-center justify-center shadow-lg hover:bg-[#3c2c50] transition"
-              onClick={() => setShowGuide((prev) => !prev)}
-            >
-              <span className="text-lg font-semibold">?</span>
-            </button>
-            {showGuide && (
-              <div className="absolute right-0 mt-2 w-72 bg-white text-[#4a3562] rounded-2xl shadow-xl border border-[#d7c38e] p-4 z-10">
-                <p className="text-sm font-semibold mb-1">Cách chơi</p>
-                <p className="text-sm leading-relaxed">
-                  Nhìn vào ảnh mẫu và thể hiện lại cảm xúc tương ứng bằng khuôn mặt. Nhấn Bắt đầu để bật camera, hệ thống sẽ chấm điểm tự động.
-                </p>
-              </div>
-            )}
+          <div className="flex gap-2 items-center">
+            <SoundEffectsToggle />
+            <div className="relative">
+              <button
+                className="w-10 h-10 rounded-full bg-[#4a3562] text-white flex items-center justify-center shadow-lg hover:bg-[#3c2c50] transition"
+                onClick={() => setShowGuide((prev) => !prev)}
+              >
+                <span className="text-lg font-semibold">?</span>
+              </button>
+              {showGuide && (
+                <div className="absolute right-0 mt-2 w-72 bg-white text-[#4a3562] rounded-2xl shadow-xl border border-[#d7c38e] p-4 z-10">
+                  <p className="text-sm font-semibold mb-1">Cách chơi</p>
+                  <p className="text-sm leading-relaxed">
+                    Nhìn vào ảnh mẫu và thể hiện lại cảm xúc tương ứng bằng khuôn mặt. Nhấn Bắt đầu để bật camera, hệ thống sẽ chấm điểm tự động.
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
