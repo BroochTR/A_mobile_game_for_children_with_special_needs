@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Gamepad2, BookOpen, Target } from "lucide-react";
+import { Gamepad2, BookOpen, Target, Puzzle } from "lucide-react";
 import heroImage from "@/assets/hero-emotions.jpg";
 
 const Home = () => {
@@ -30,14 +30,16 @@ const Home = () => {
             <br />
             <span className="text-accent">Nhà Khám Phá Cảm Xúc</span> Tuyệt Vời Nhất
           </h1>
-          <Button size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground text-lg px-8 py-6 rounded-full shadow-lg">
-            Bắt Đầu Học
-          </Button>
+          <Link to="/learn">
+            <Button size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground text-lg px-8 py-6 rounded-full shadow-lg">
+              Bắt Đầu Học
+            </Button>
+          </Link>
         </div>
       </div>
 
       {/* Feature Cards */}
-      <div className="grid md:grid-cols-3 -mt-20 relative z-20">
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 -mt-20 relative z-20">
         <Link to="/game3" className="block">
           <Card className="h-full bg-primary text-primary-foreground border-0 rounded-none p-8 text-center hover:opacity-90 transition-opacity">
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-background mb-6">
@@ -70,6 +72,18 @@ const Home = () => {
             <h3 className="text-2xl font-bold mb-4">Story Time Emotions</h3>
             <p className="text-accent-foreground/90 leading-relaxed">
               Chọn cảm xúc phù hợp cho các tình huống hàng ngày thông qua những câu chuyện và tình huống hấp dẫn.
+            </p>
+          </Card>
+        </Link>
+
+        <Link to="/game4" className="block">
+          <Card className="h-full bg-[#7a59a4] text-white border-0 rounded-none p-8 text-center hover:opacity-90 transition-opacity">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-background mb-6">
+              <Puzzle className="w-10 h-10 text-[#7a59a4]" />
+            </div>
+            <h3 className="text-2xl font-bold mb-4">Emotion Puzzle</h3>
+            <p className="text-white/90 leading-relaxed">
+              Ghép các mảnh hình để tạo thành khuôn mặt hoàn chỉnh, sau đó đoán xem đó là cảm xúc gì!
             </p>
           </Card>
         </Link>

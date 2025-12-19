@@ -113,6 +113,14 @@ def game2():
 def game3():
     return send_from_directory(DIST_DIR, 'index.html')
 
+@app.route('/game4')
+def game4():
+    return send_from_directory(DIST_DIR, 'index.html')
+
+@app.route('/learn')
+def learn():
+    return send_from_directory(DIST_DIR, 'index.html')
+
 @app.route('/favicon.ico')
 def favicon():
     return send_from_directory(DIST_DIR, 'favicon.ico')
@@ -265,6 +273,81 @@ def get_scenario():
         'correct_emotion': scenario['correct_emotion'],
         'emoji': scenario['emoji'],
         'illustration': scenario['illustration']
+    })
+
+@app.route('/analyze-emotion', methods=['POST'])
+def analyze_emotion():
+    """API trả về tất cả predictions của 7 cảm xúc để hiển thị thanh đo"""
+    data = request.json
+    img_data = data['image']
+    
+    # Decode base64 image
+    img_str = img_data.split(',')[1]
+    nparr = np.frombuffer(base64.b64decode(img_str), np.uint8)
+    img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+    # Face detection
+    height, width = img.shape[:2]
+    blob = cv2.dnn.blobFromImage(cv2.resize(img, (300, 300)), 1.0, (300, 300), (104.0, 117.0, 123.0))
+    face_net.setInput(blob)
+    dnnFaces = face_net.forward()
+    grayFrame = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    
+    for i in range(dnnFaces.shape[2]):
+        confidence = dnnFaces[0, 0, i, 2]
+        if confidence > 0.5:
+            box = dnnFaces[0, 0, i, 3:7] * np.array([width, height, width, height])
+            (x, y, x1, y1) = box.astype("int")
+            x, y = max(0, x), max(0, y)
+            x1, y1 = min(width, x1), min(height, y1)
+            if x1 <= x or y1 <= y:
+                continue
+            grayFace = grayFrame[y:y1, x:x1]
+            if grayFace.size == 0:
+                continue
+            try:
+                grayFace = cv2.resize(grayFace, emotionTargetSize)
+            except:
+                continue
+            grayFace = grayFace.astype('float32')
+            grayFace = grayFace / 255.0
+            grayFace = (grayFace - 0.5) * 2.0
+            grayFace = np.expand_dims(grayFace, 0)
+            grayFace = np.expand_dims(grayFace, -1)
+            emotion_prediction = emotionClassifier.predict(grayFace)
+            
+            # Trả về tất cả predictions
+            all_predictions = {}
+            for idx, emotion_name in emotions.items():
+                probability = float(emotion_prediction[0][idx])
+                all_predictions[emotion_name] = probability
+            
+            # Tìm cảm xúc có confidence cao nhất
+            max_emotion_idx = np.argmax(emotion_prediction)
+            max_emotion = emotions[max_emotion_idx]
+            max_confidence = float(emotion_prediction[0][max_emotion_idx])
+            
+            emotion_vietnamese = {
+                'Happy': 'Vui',
+                'Sad': 'Buồn',
+                'Angry': 'Giận',
+                'Fear': 'Sợ hãi',
+                'Suprise': 'Ngạc nhiên',
+                'Neutral': 'Trung tính',
+                'Disgust': 'Ghê tởm'
+            }
+            
+            return jsonify({
+                'success': True,
+                'predictions': all_predictions,
+                'dominant_emotion': max_emotion,
+                'dominant_confidence': max_confidence,
+                'vietnamese': emotion_vietnamese.get(max_emotion, max_emotion)
+            })
+    
+    return jsonify({
+        'success': False,
+        'message': 'Không thể nhận diện khuôn mặt. Hãy điều chỉnh vị trí hoặc ánh sáng.'
     })
 
 @app.route('/predict-game2', methods=['POST'])
